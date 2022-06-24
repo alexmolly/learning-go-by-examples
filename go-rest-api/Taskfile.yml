@@ -1,0 +1,46 @@
+version: "3"
+    
+tasks:
+    build:
+        desc: Build the app
+        cmds:
+        - GOFLAGS=-mod=mod go build -o bin/go-rest-api internal/main.go 
+
+    run: 
+        desc: Run the app
+        cmds:
+        - GOFLAGS=-mod=mod go run internal/main.go
+
+    swagger.gen:
+        desc: Generate Go code
+        cmds:
+        - GOFLAGS=-mod=mod go generate github.com/alexmolly/learning-go-by-examples/go-rest-api/internal github.com/alexmolly/learning-go-by-examples/go-rest-api/pkg/swagger
+
+    swagger.validate:
+        desc: Validate swagger
+        cmds:
+        - swagger validate pkg/swagger/swagger.yml
+
+    swagger.v:
+        desc: Validate swagger via docker
+        cmds:
+        - docker run --rm -it  --user $(id -u):$(id -g) -e GOPATH=/go -v $(go env GOPATH):/go -v $HOME:$HOME -w $(pwd) quay.io/goswagger/swagger validate pkg/swagger/swagger.yml
+
+    swagger.g:
+        desc: Generate Go code via docker
+        cmds:
+        - rm -rf pkg/swagger/server
+        - mkdir -p pkg/swagger/server
+        - docker run --rm -it  --user $(id -u):$(id -g) -e GOPATH=/go -v $(go env GOPATH):/go -v $HOME:$HOME -w $(pwd) quay.io/goswagger/swagger  generate server --target pkg/swagger/server --name hello-api --spec pkg/swagger/swagger.yml --exclude-main
+
+
+    swagger.clear:
+        desc: Clear swagger folder 
+        cmds:
+        - rm -rf pkg/swagger/server
+
+
+    swagger.doc:
+        desc: Doc for swagger
+        cmds:
+        - docker run -i yousan/swagger-yaml-to-html < pkg/swagger/swagger.yml > doc/index.html
